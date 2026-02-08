@@ -1,0 +1,32 @@
+{
+  "name": "@mochi-cards/cli",
+  "version": "0.1.0",
+  "description": "A command-line interface for Mochi Cards",
+  "module": "src/index.ts",
+  "type": "module",
+  "bin": {
+    "mochi": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "build": "bun build src/index.ts --outfile dist/mochi --compile",
+    "dev": "bun --watch src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "mochi",
+    "flashcards",
+    "spaced-repetition",
+    "cli",
+    "api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}
