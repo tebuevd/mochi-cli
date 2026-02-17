@@ -3,7 +3,7 @@
 import { decks, setApiKey, MochiApiError } from "../api/index.ts";
 import type { DeckCreateInput, DeckUpdateInput, DeckSortBy, DeckCardsView } from "../types/index.ts";
 import { unreachableCase } from "../utils.ts";
-import type { TDeckCommand } from "./types.ts";
+import type { TDeckCommand } from "./commands.ts";
 
 function formatDeck(deck: unknown): string {
   return JSON.stringify(deck, null, 2);

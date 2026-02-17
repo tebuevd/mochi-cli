@@ -3,7 +3,7 @@
 import { templates, setApiKey, MochiApiError } from "../api/index.ts";
 import type { TemplateCreateInput, TemplateFields, TemplateFieldType, TemplateStyle, TemplateOptions } from "../types/index.ts";
 import { unreachableCase } from "../utils.ts";
-import type { TTemplateCommand } from "./types.ts";
+import type { TTemplateCommand } from "./commands.ts";
 
 function formatTemplate(template: unknown): string {
   return JSON.stringify(template, null, 2);

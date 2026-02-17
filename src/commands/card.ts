@@ -3,7 +3,7 @@
 import { cards, setApiKey, MochiApiError } from "../api/index.ts";
 import type { CardCreateInput, CardUpdateInput, CardFields } from "../types/index.ts";
 import { unreachableCase } from "../utils.ts";
-import type { TCardCommand } from "./types.ts";
+import type { TCardCommand } from "./commands.ts";
 
 function formatCard(card: unknown): string {
   return JSON.stringify(card, null, 2);

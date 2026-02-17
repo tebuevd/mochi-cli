@@ -2,7 +2,7 @@
 
 import { due, setApiKey, MochiApiError } from "../api/index.ts";
 import { unreachableCase } from "../utils.ts";
-import type { TDueCommand } from "./types.ts";
+import type { TDueCommand } from "./commands.ts";
 
 export async function handleDueCommand(
   action: TDueCommand["subcommand"],

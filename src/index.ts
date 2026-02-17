@@ -6,9 +6,10 @@ import { handleDeckCommand } from "./commands/deck.ts";
 import { handleTemplateCommand } from "./commands/template.ts";
 import { handleDueCommand } from "./commands/due.ts";
 import { setApiKey } from "./api/index.ts";
-import { Command, type TCommand, type TCardCommand, type TDeckCommand, type TTemplateCommand, type TDueCommand, type THelpCommand } from "./commands/types.ts";
+import { Command, type TCommand } from "./commands/commands.ts";
 import { type } from "arktype";
 import { unreachableCase } from "./utils.ts";
+import { formatAndPrintErrors, printSimpleError } from "./errors";
 
 const VERSION = "0.1.0";
 
@@ -273,7 +274,11 @@ async function main(): Promise<void> {
 
   // Validate combined command structure
   if (!rawCommand) {
-    throw new Error("Command required (card, deck, template, due, help)");
+    printSimpleError("No command provided");
+    console.error("");
+    console.error("Available commands: card, deck, template, due, help");
+    console.error("Example: mochi deck list");
+    process.exit(1);
   }
 
   // Default subcommand for "due" is "list"
@@ -281,16 +286,17 @@ async function main(): Promise<void> {
 
   const parsed = Command({ command: rawCommand, subcommand });
   if (parsed instanceof type.errors) {
-    throw new Error(`Invalid command: ${rawCommand} ${subcommand || ""}. ${parsed.summary}`);
+    formatAndPrintErrors(parsed, { command: rawCommand, subcommand });
+    process.exit(1);
   }
 
   try {
     await handleCommand(parsed, args, globalArgs);
   } catch (error) {
     if (error instanceof Error) {
-      console.error(JSON.stringify({ error: error.message }, null, 2));
+      printSimpleError(error.message);
     } else {
-      console.error(JSON.stringify({ error: String(error) }, null, 2));
+      printSimpleError(String(error));
     }
     process.exit(1);
   }
