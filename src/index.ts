@@ -6,6 +6,8 @@ import { handleDeckCommand } from "./commands/deck.ts";
 import { handleTemplateCommand } from "./commands/template.ts";
 import { handleDueCommand } from "./commands/due.ts";
 import { setApiKey } from "./api/index.ts";
+import { DeckCommands } from "./commands/types.ts";
+import { type } from "arktype";
 
 const VERSION = "0.1.0";
 
@@ -158,11 +160,11 @@ function parseArgs(argv: string[]): {
 } {
   const globalArgs: { "api-key"?: string; help?: boolean; version?: boolean } = {};
   const args: Record<string, unknown> = {};
-  
+
   // First, scan for global flags anywhere in the args
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-    
+
     if (arg === "--help" || arg === "-h") {
       globalArgs.help = true;
     } else if (arg === "--version" || arg === "-v") {
@@ -171,12 +173,12 @@ function parseArgs(argv: string[]): {
       globalArgs["api-key"] = argv[++i];
     }
   }
-  
+
   // If help or version is requested, return early
   if (globalArgs.help || globalArgs.version) {
     return { command: "", action: "", args, globalArgs };
   }
-  
+
   // Find command (first non-flag)
   let command = "";
   let commandIndex = -1;
@@ -187,11 +189,11 @@ function parseArgs(argv: string[]): {
       break;
     }
   }
-  
+
   if (!command) {
     return { command: "", action: "", args, globalArgs };
   }
-  
+
   // Find action (second non-flag)
   let action = "";
   let actionIndex = -1;
@@ -202,30 +204,30 @@ function parseArgs(argv: string[]): {
       break;
     }
   }
-  
+
   // Parse all remaining arguments after the action
   for (let i = actionIndex + 1; i < argv.length; i++) {
     const arg = argv[i];
-    
+
     // Skip global flags (already processed)
-    if (arg === "--help" || arg === "-h" || arg === "--version" || arg === "-v" || 
-        arg === "--api-key" || (i > 0 && argv[i - 1] === "--api-key")) {
+    if (arg === "--help" || arg === "-h" || arg === "--version" || arg === "-v" ||
+      arg === "--api-key" || (i > 0 && argv[i - 1] === "--api-key")) {
       continue;
     }
-    
+
     // Boolean flags
-    if (arg === "--archived" || arg === "--review-reverse" || arg === "--show-sides" || 
-        arg === "--sort-by-direction" || arg === "--all") {
+    if (arg === "--archived" || arg === "--review-reverse" || arg === "--show-sides" ||
+      arg === "--sort-by-direction" || arg === "--all") {
       const key = arg.replace(/^--/, "").replace(/-$/, "");
       args[key] = true;
       continue;
     }
-    
+
     // Key-value arguments
     if (arg.startsWith("--")) {
       const key = arg.slice(2);
       const value = argv[i + 1];
-      
+
       // Check if next arg is a value (not a flag)
       if (value && !value.startsWith("--") && !value.startsWith("-")) {
         args[key] = value;
@@ -239,61 +241,63 @@ function parseArgs(argv: string[]): {
       args.id = arg;
     }
   }
-  
+
   return { command, action, args, globalArgs };
 }
 
 async function main(): Promise<void> {
   const argv = process.argv.slice(2);
-  
+
   if (argv.length === 0) {
     printHelp();
     process.exit(0);
   }
-  
+
   let { command, action, args, globalArgs } = parseArgs(argv);
-  
+
   if (globalArgs.help) {
     printHelp();
     process.exit(0);
   }
-  
+
   if (globalArgs.version) {
     printVersion();
     process.exit(0);
   }
-  
+
   // Set up API key if provided
   if (globalArgs["api-key"]) {
     setApiKey(globalArgs["api-key"]);
   }
-  
+
   try {
     switch (command) {
       case "card":
         if (!action) throw new Error("Card action required (list, get, create, update, delete)");
         await handleCardCommand(action, args, globalArgs);
         break;
-        
-      case "deck":
-        if (!action) throw new Error("Deck action required (list, get, create, update, delete)");
-        await handleDeckCommand(action, args, globalArgs);
+
+      case "deck": {
+        const parsedAction = DeckCommands(action)
+        if (parsedAction instanceof type.errors) { throw new Error("Deck action required (list, get, create, update, delete)"); }
+        await handleDeckCommand(parsedAction, args, globalArgs);
         break;
-        
+      }
+
       case "template":
         if (!action) throw new Error("Template action required (list, get, create)");
         await handleTemplateCommand(action, args, globalArgs);
         break;
-        
+
       case "due":
         if (!action) action = "list";
         await handleDueCommand(action, args, globalArgs);
         break;
-        
+
       case "help":
         printHelp();
         break;
-        
+
       default:
         throw new Error(`Unknown command: ${command}`);
     }

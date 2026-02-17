@@ -2,13 +2,15 @@
 
 import { decks, setApiKey, MochiApiError } from "../api/index.ts";
 import type { DeckCreateInput, DeckUpdateInput, DeckSortBy, DeckCardsView } from "../types/index.ts";
+import { unreachableCase } from "../utils.ts";
+import { TDeckCommands } from "./types.ts";
 
 function formatDeck(deck: unknown): string {
   return JSON.stringify(deck, null, 2);
 }
 
 const VALID_SORT_BY: DeckSortBy[] = [
-  "none", "lexigraphically", "lexicographically", "created-at", "updated-at", 
+  "none", "lexigraphically", "lexicographically", "created-at", "updated-at",
   "retention-rate-asc", "interval-length"
 ];
 
@@ -17,9 +19,9 @@ const VALID_CARDS_VIEW: DeckCardsView[] = ["list", "grid", "note", "column"];
 function buildCreateInput(args: Record<string, unknown>): DeckCreateInput {
   const name = args.name as string | undefined;
   if (!name) throw new Error("--name is required");
-  
+
   const input: DeckCreateInput = { name };
-  
+
   if (args["parent-id"]) input["parent-id"] = args["parent-id"] as string;
   if (args.sort !== undefined) input.sort = Number(args.sort);
   if (args["archived"] !== undefined) input["archived?"] = Boolean(args["archived"]);
@@ -27,7 +29,7 @@ function buildCreateInput(args: Record<string, unknown>): DeckCreateInput {
   if (args["show-sides"] !== undefined) input["show-sides?"] = Boolean(args["show-sides"]);
   if (args["sort-by-direction"] !== undefined) input["sort-by-direction"] = Boolean(args["sort-by-direction"]);
   if (args["review-reverse"] !== undefined) input["review-reverse?"] = Boolean(args["review-reverse"]);
-  
+
   if (args["sort-by"]) {
     const sortBy = args["sort-by"] as string;
     if (!VALID_SORT_BY.includes(sortBy as DeckSortBy)) {
@@ -35,7 +37,7 @@ function buildCreateInput(args: Record<string, unknown>): DeckCreateInput {
     }
     input["sort-by"] = sortBy as DeckSortBy;
   }
-  
+
   if (args["cards-view"]) {
     const cardsView = args["cards-view"] as string;
     if (!VALID_CARDS_VIEW.includes(cardsView as DeckCardsView)) {
@@ -43,13 +45,13 @@ function buildCreateInput(args: Record<string, unknown>): DeckCreateInput {
     }
     input["cards-view"] = cardsView as DeckCardsView;
   }
-  
+
   return input;
 }
 
 function buildUpdateInput(args: Record<string, unknown>): DeckUpdateInput {
   const input: DeckUpdateInput = {};
-  
+
   if (args.name !== undefined) input.name = args.name as string;
   if (args["parent-id"] !== undefined) input["parent-id"] = args["parent-id"] as string | null;
   if (args.sort !== undefined) input.sort = Number(args.sort);
@@ -58,7 +60,7 @@ function buildUpdateInput(args: Record<string, unknown>): DeckUpdateInput {
   if (args["show-sides"] !== undefined) input["show-sides?"] = Boolean(args["show-sides"]);
   if (args["sort-by-direction"] !== undefined) input["sort-by-direction"] = Boolean(args["sort-by-direction"]);
   if (args["review-reverse"] !== undefined) input["review-reverse?"] = Boolean(args["review-reverse"]);
-  
+
   if (args["sort-by"] !== undefined) {
     const sortBy = args["sort-by"] as string;
     if (!VALID_SORT_BY.includes(sortBy as DeckSortBy)) {
@@ -66,7 +68,7 @@ function buildUpdateInput(args: Record<string, unknown>): DeckUpdateInput {
     }
     input["sort-by"] = sortBy as DeckSortBy;
   }
-  
+
   if (args["cards-view"] !== undefined) {
     const cardsView = args["cards-view"] as string;
     if (!VALID_CARDS_VIEW.includes(cardsView as DeckCardsView)) {
@@ -74,19 +76,19 @@ function buildUpdateInput(args: Record<string, unknown>): DeckUpdateInput {
     }
     input["cards-view"] = cardsView as DeckCardsView;
   }
-  
+
   return input;
 }
 
 export async function handleDeckCommand(
-  action: string,
+  action: TDeckCommands,
   args: Record<string, unknown>,
   globalArgs: { "api-key"?: string }
 ): Promise<void> {
   if (globalArgs["api-key"]) {
     setApiKey(globalArgs["api-key"]);
   }
-  
+
   try {
     switch (action) {
       case "list": {
@@ -102,7 +104,7 @@ export async function handleDeckCommand(
         }
         break;
       }
-      
+
       case "get": {
         const id = args.id as string;
         if (!id) throw new Error("Deck ID is required");
@@ -110,14 +112,14 @@ export async function handleDeckCommand(
         console.log(formatDeck(deck));
         break;
       }
-      
+
       case "create": {
         const input = buildCreateInput(args);
         const deck = await decks.create(input);
         console.log(formatDeck(deck));
         break;
       }
-      
+
       case "update": {
         const id = args.id as string;
         if (!id) throw new Error("Deck ID is required");
@@ -126,7 +128,7 @@ export async function handleDeckCommand(
         console.log(formatDeck(deck));
         break;
       }
-      
+
       case "delete": {
         const id = args.id as string;
         if (!id) throw new Error("Deck ID is required");
@@ -134,16 +136,16 @@ export async function handleDeckCommand(
         console.log(JSON.stringify({ success: true, message: "Deck deleted" }));
         break;
       }
-      
+
       default:
-        throw new Error(`Unknown deck action: ${action}`);
+        return unreachableCase(action, Promise.resolve(undefined))
     }
   } catch (error) {
     if (error instanceof MochiApiError) {
-      console.error(JSON.stringify({ 
-        error: error.message, 
+      console.error(JSON.stringify({
+        error: error.message,
         statusCode: error.statusCode,
-        details: error.errors 
+        details: error.errors
       }, null, 2));
       process.exit(1);
     }

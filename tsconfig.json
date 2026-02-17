@@ -19,6 +19,7 @@
     "allowImportingTsExtensions": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": false, // we'll move over to 'true' soon
     "types": ["bun-types"]
   },
   "include": ["src/**/*"],
