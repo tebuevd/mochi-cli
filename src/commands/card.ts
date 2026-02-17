@@ -2,6 +2,8 @@
 
 import { cards, setApiKey, MochiApiError } from "../api/index.ts";
 import type { CardCreateInput, CardUpdateInput, CardFields } from "../types/index.ts";
+import { unreachableCase } from "../utils.ts";
+import { TCardCommands } from "./types.ts";
 
 function formatCard(card: unknown): string {
   return JSON.stringify(card, null, 2);
@@ -66,7 +68,7 @@ function buildUpdateInput(args: Record<string, unknown>): CardUpdateInput {
 }
 
 export async function handleCardCommand(
-  action: string,
+  action: TCardCommands,
   args: Record<string, unknown>,
   globalArgs: { "api-key"?: string }
 ): Promise<void> {
@@ -150,7 +152,7 @@ export async function handleCardCommand(
       }
       
       default:
-        throw new Error(`Unknown card action: ${action}`);
+        return unreachableCase(action, Promise.resolve(undefined));
     }
   } catch (error) {
     if (error instanceof MochiApiError) {

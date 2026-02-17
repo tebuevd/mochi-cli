@@ -1,9 +1,11 @@
 // Due commands
 
 import { due, setApiKey, MochiApiError } from "../api/index.ts";
+import { unreachableCase } from "../utils.ts";
+import { TDueCommands } from "./types.ts";
 
 export async function handleDueCommand(
-  action: string,
+  action: TDueCommands,
   args: Record<string, unknown>,
   globalArgs: { "api-key"?: string }
 ): Promise<void> {
@@ -31,7 +33,7 @@ export async function handleDueCommand(
       }
       
       default:
-        throw new Error(`Unknown due action: ${action}`);
+        return unreachableCase(action, Promise.resolve(undefined));
     }
   } catch (error) {
     if (error instanceof MochiApiError) {

@@ -2,6 +2,8 @@
 
 import { templates, setApiKey, MochiApiError } from "../api/index.ts";
 import type { TemplateCreateInput, TemplateFields, TemplateFieldType, TemplateStyle, TemplateOptions } from "../types/index.ts";
+import { unreachableCase } from "../utils.ts";
+import { TTemplateCommands } from "./types.ts";
 
 function formatTemplate(template: unknown): string {
   return JSON.stringify(template, null, 2);
@@ -81,7 +83,7 @@ function buildCreateInput(args: Record<string, unknown>): TemplateCreateInput {
 }
 
 export async function handleTemplateCommand(
-  action: string,
+  action: TTemplateCommands,
   args: Record<string, unknown>,
   globalArgs: { "api-key"?: string }
 ): Promise<void> {
@@ -121,7 +123,7 @@ export async function handleTemplateCommand(
       }
       
       default:
-        throw new Error(`Unknown template action: ${action}`);
+        return unreachableCase(action, Promise.resolve(undefined));
     }
   } catch (error) {
     if (error instanceof MochiApiError) {

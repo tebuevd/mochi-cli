@@ -6,7 +6,7 @@ import { handleDeckCommand } from "./commands/deck.ts";
 import { handleTemplateCommand } from "./commands/template.ts";
 import { handleDueCommand } from "./commands/due.ts";
 import { setApiKey } from "./api/index.ts";
-import { DeckCommands } from "./commands/types.ts";
+import { CardCommands, DeckCommands, DueCommands, TemplateCommands } from "./commands/types.ts";
 import { type } from "arktype";
 
 const VERSION = "0.1.0";
@@ -272,10 +272,14 @@ async function main(): Promise<void> {
 
   try {
     switch (command) {
-      case "card":
-        if (!action) throw new Error("Card action required (list, get, create, update, delete)");
-        await handleCardCommand(action, args, globalArgs);
+      case "card": {
+        const parsedAction = CardCommands(action);
+        if (parsedAction instanceof type.errors) {
+          throw new Error("Card action required (list, get, create, update, delete, add-attachment, delete-attachment)");
+        }
+        await handleCardCommand(parsedAction, args, globalArgs);
         break;
+      }
 
       case "deck": {
         const parsedAction = DeckCommands(action)
@@ -284,15 +288,24 @@ async function main(): Promise<void> {
         break;
       }
 
-      case "template":
-        if (!action) throw new Error("Template action required (list, get, create)");
-        await handleTemplateCommand(action, args, globalArgs);
+      case "template": {
+        const parsedAction = TemplateCommands(action);
+        if (parsedAction instanceof type.errors) {
+          throw new Error("Template action required (list, get, create)");
+        }
+        await handleTemplateCommand(parsedAction, args, globalArgs);
         break;
+      }
 
-      case "due":
+      case "due": {
         if (!action) action = "list";
-        await handleDueCommand(action, args, globalArgs);
+        const parsedAction = DueCommands(action);
+        if (parsedAction instanceof type.errors) {
+          throw new Error("Due action required (list, list-by-deck)");
+        }
+        await handleDueCommand(parsedAction, args, globalArgs);
         break;
+      }
 
       case "help":
         printHelp();
