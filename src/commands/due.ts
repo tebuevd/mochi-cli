@@ -2,10 +2,10 @@
 
 import { due, setApiKey, MochiApiError } from "../api/index.ts";
 import { unreachableCase } from "../utils.ts";
-import { TDueCommands } from "./types.ts";
+import type { TDueCommand } from "./types.ts";
 
 export async function handleDueCommand(
-  action: TDueCommands,
+  action: TDueCommand["subcommand"],
   args: Record<string, unknown>,
   globalArgs: { "api-key"?: string }
 ): Promise<void> {

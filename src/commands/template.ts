@@ -3,7 +3,7 @@
 import { templates, setApiKey, MochiApiError } from "../api/index.ts";
 import type { TemplateCreateInput, TemplateFields, TemplateFieldType, TemplateStyle, TemplateOptions } from "../types/index.ts";
 import { unreachableCase } from "../utils.ts";
-import { TTemplateCommands } from "./types.ts";
+import type { TTemplateCommand } from "./types.ts";
 
 function formatTemplate(template: unknown): string {
   return JSON.stringify(template, null, 2);
@@ -83,7 +83,7 @@ function buildCreateInput(args: Record<string, unknown>): TemplateCreateInput {
 }
 
 export async function handleTemplateCommand(
-  action: TTemplateCommands,
+  action: TTemplateCommand["subcommand"],
   args: Record<string, unknown>,
   globalArgs: { "api-key"?: string }
 ): Promise<void> {

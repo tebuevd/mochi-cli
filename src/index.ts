@@ -6,8 +6,9 @@ import { handleDeckCommand } from "./commands/deck.ts";
 import { handleTemplateCommand } from "./commands/template.ts";
 import { handleDueCommand } from "./commands/due.ts";
 import { setApiKey } from "./api/index.ts";
-import { CardCommands, DeckCommands, DueCommands, TemplateCommands } from "./commands/types.ts";
+import { Command, type TCommand, type TCardCommand, type TDeckCommand, type TTemplateCommand, type TDueCommand, type THelpCommand } from "./commands/types.ts";
 import { type } from "arktype";
+import { unreachableCase } from "./utils.ts";
 
 const VERSION = "0.1.0";
 
@@ -253,7 +254,7 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  let { command, action, args, globalArgs } = parseArgs(argv);
+  let { command: rawCommand, action: rawSubcommand, args, globalArgs } = parseArgs(argv);
 
   if (globalArgs.help) {
     printHelp();
@@ -270,50 +271,21 @@ async function main(): Promise<void> {
     setApiKey(globalArgs["api-key"]);
   }
 
+  // Validate combined command structure
+  if (!rawCommand) {
+    throw new Error("Command required (card, deck, template, due, help)");
+  }
+
+  // Default subcommand for "due" is "list"
+  const subcommand = rawCommand === "due" && !rawSubcommand ? "list" : rawSubcommand;
+
+  const parsed = Command({ command: rawCommand, subcommand });
+  if (parsed instanceof type.errors) {
+    throw new Error(`Invalid command: ${rawCommand} ${subcommand || ""}. ${parsed.summary}`);
+  }
+
   try {
-    switch (command) {
-      case "card": {
-        const parsedAction = CardCommands(action);
-        if (parsedAction instanceof type.errors) {
-          throw new Error("Card action required (list, get, create, update, delete, add-attachment, delete-attachment)");
-        }
-        await handleCardCommand(parsedAction, args, globalArgs);
-        break;
-      }
-
-      case "deck": {
-        const parsedAction = DeckCommands(action)
-        if (parsedAction instanceof type.errors) { throw new Error("Deck action required (list, get, create, update, delete)"); }
-        await handleDeckCommand(parsedAction, args, globalArgs);
-        break;
-      }
-
-      case "template": {
-        const parsedAction = TemplateCommands(action);
-        if (parsedAction instanceof type.errors) {
-          throw new Error("Template action required (list, get, create)");
-        }
-        await handleTemplateCommand(parsedAction, args, globalArgs);
-        break;
-      }
-
-      case "due": {
-        if (!action) action = "list";
-        const parsedAction = DueCommands(action);
-        if (parsedAction instanceof type.errors) {
-          throw new Error("Due action required (list, list-by-deck)");
-        }
-        await handleDueCommand(parsedAction, args, globalArgs);
-        break;
-      }
-
-      case "help":
-        printHelp();
-        break;
-
-      default:
-        throw new Error(`Unknown command: ${command}`);
-    }
+    await handleCommand(parsed, args, globalArgs);
   } catch (error) {
     if (error instanceof Error) {
       console.error(JSON.stringify({ error: error.message }, null, 2));
@@ -321,6 +293,32 @@ async function main(): Promise<void> {
       console.error(JSON.stringify({ error: String(error) }, null, 2));
     }
     process.exit(1);
+  }
+}
+
+async function handleCommand(
+  cmd: TCommand,
+  args: Record<string, unknown>,
+  globalArgs: { "api-key"?: string }
+): Promise<void> {
+  switch (cmd.command) {
+    case "card":
+      await handleCardCommand(cmd.subcommand, args, globalArgs);
+      break;
+    case "deck":
+      await handleDeckCommand(cmd.subcommand, args, globalArgs);
+      break;
+    case "template":
+      await handleTemplateCommand(cmd.subcommand, args, globalArgs);
+      break;
+    case "due":
+      await handleDueCommand(cmd.subcommand, args, globalArgs);
+      break;
+    case "help":
+      printHelp();
+      break;
+    default:
+      return unreachableCase(cmd, Promise.resolve(undefined));
   }
 }
 

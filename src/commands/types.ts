@@ -1,13 +1,34 @@
 import { type } from "arktype"
 
-export const DeckCommands = type('"list" | "get" | "create" | "update" | "delete"')
-export type TDeckCommands = typeof DeckCommands.infer
+const CardCommand = type({
+  command: "'card'",
+  subcommand: "'list' | 'get' | 'create' | 'update' | 'delete' | 'add-attachment' | 'delete-attachment'"
+})
 
-export const CardCommands = type('"list" | "get" | "create" | "update" | "delete" | "add-attachment" | "delete-attachment"')
-export type TCardCommands = typeof CardCommands.infer
+const DeckCommand = type({
+  command: "'deck'",
+  subcommand: "'list' | 'get' | 'create' | 'update' | 'delete'"
+})
 
-export const TemplateCommands = type('"list" | "get" | "create"')
-export type TTemplateCommands = typeof TemplateCommands.infer
+const TemplateCommand = type({
+  command: "'template'",
+  subcommand: "'list' | 'get' | 'create'"
+})
 
-export const DueCommands = type('"list" | "list-by-deck"')
-export type TDueCommands = typeof DueCommands.infer
+const DueCommand = type({
+  command: "'due'",
+  subcommand: "'list' | 'list-by-deck'"
+})
+
+const HelpCommand = type({
+  command: "'help'"
+})
+
+export const Command = CardCommand.or(DeckCommand).or(TemplateCommand).or(DueCommand).or(HelpCommand)
+
+export type TCommand = typeof Command.infer
+export type TCardCommand = typeof CardCommand.infer
+export type TDeckCommand = typeof DeckCommand.infer
+export type TTemplateCommand = typeof TemplateCommand.infer
+export type TDueCommand = typeof DueCommand.infer
+export type THelpCommand = typeof HelpCommand.infer

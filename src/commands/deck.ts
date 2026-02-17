@@ -3,7 +3,7 @@
 import { decks, setApiKey, MochiApiError } from "../api/index.ts";
 import type { DeckCreateInput, DeckUpdateInput, DeckSortBy, DeckCardsView } from "../types/index.ts";
 import { unreachableCase } from "../utils.ts";
-import { TDeckCommands } from "./types.ts";
+import type { TDeckCommand } from "./types.ts";
 
 function formatDeck(deck: unknown): string {
   return JSON.stringify(deck, null, 2);
@@ -81,7 +81,7 @@ function buildUpdateInput(args: Record<string, unknown>): DeckUpdateInput {
 }
 
 export async function handleDeckCommand(
-  action: TDeckCommands,
+  action: TDeckCommand["subcommand"],
   args: Record<string, unknown>,
   globalArgs: { "api-key"?: string }
 ): Promise<void> {
